@@ -1,3 +1,23 @@
+
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&family=Noto+Sans+JP:wght@300;400;500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  .site{max-width:860px;margin:0 auto;padding:0 0 3rem;font-family:'Noto Sans JP',sans-serif;color:var(--color-text-primary,#1a1a1a)}
+
+  .header{background:#0a1628;color:#fff;padding:2.5rem 2rem 2rem;position:relative;overflow:hidden}
+  .header::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 30px,rgba(200,168,75,0.04) 30px,rgba(200,168,75,0.04) 31px),repeating-linear-gradient(90deg,transparent,transparent 30px,rgba(200,168,75,0.04) 30px,rgba(200,168,75,0.04) 31px);pointer-events:none}
+  .header-inner{position:relative;z-index:1}
+  .country-title{font-family:'Noto Serif JP',serif;font-size:2rem;font-weight:600;color:#fff;letter-spacing:0.06em;line-height:1.2}
+  .country-sub{font-size:0.78rem;color:rgba(200,168,75,0.8);letter-spacing:0.2em;margin-top:0.4rem}
+  .mc-badge{position:absolute;top:1rem;right:1.5rem;background:rgba(200,168,75,0.15);border:1px solid rgba(200,168,75,0.3);color:#e8c96b;font-size:0.65rem;padding:3px 10px;border-radius:2px;letter-spacing:0.12em}
+
+  .nav{background:#132040;display:flex;border-bottom:1px solid rgba(200,168,75,0.2);flex-wrap:wrap}
+  .nav a{color:rgba(255,255,255,0.65);font-size:0.78rem;padding:0.75rem 1.2rem;cursor:pointer;letter-spacing:0.08em;border-bottom:2px solid transparent;transition:all 0.2s;text-decoration:none;display:block}
+  .nav a:hover,.nav a.active{color:#e8c96b;border-bottom-color:#c8a84b}
+
+  .section{display:none;padding:2rem 2rem 0}
+  .section.active{display:block}
+
+
 .nav {
     background: #132040;
     display: flex;
@@ -6,6 +26,7 @@
 }
 .section {
     display: none;
+    color: #e8c96b;
     padding: 2rem 2rem 0;
 }
 .line {
