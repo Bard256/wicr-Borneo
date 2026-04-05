@@ -29,6 +29,9 @@
     color: #e8c96b;
     padding: 2rem 2rem 0;
 }
+.section.active {
+    display: block;
+}
 .line {
     border: none;
     border-top: 0.5px solid var(--color-border-tertiary, #e0e0e0);
