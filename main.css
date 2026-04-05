@@ -21,3 +21,7 @@
     margin-bottom: 0.25rem;
     letter-spacing: 0.03em;
 }
+a.active {
+    color: #e8c96b;
+    border-bottom-color: #c8a84b;
+}
