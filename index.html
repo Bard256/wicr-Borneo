@@ -22,5 +22,14 @@
   <header>
     <h1>ボルネオ島へようこそ！</h1>
   </header>
+  <script>
+    
+function show(id,el){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav a').forEach(a=>a.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(el) el.classList.add('active');
+}
+  </script>
  </body>
 </html>
