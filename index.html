@@ -13,7 +13,7 @@
     <a class, onclick="show('news',this)">ニュース</a>
     <a class, onclick="show('immigration',this)">移民希望について</a>
   </nav>
-  <div id="welcome" class="section">
+  <div id="welcome", class="section">
     <line></line>
       <div class="t-title">ボルネオ島へようこそ</div>
     <p>マインクラフトサーバー『わいくら』内ボルネオ島ホームページへようこそ！</p>
@@ -33,6 +33,9 @@
   <script> 
     
 function show(id,el){
+  console.log(id);
+  console.log(el);
+  console.log(document.getElementById(id).outerHTML);
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav a').forEach(a=>a.classList.remove('active'));
   document.getElementById(id).classList.add('active');
