@@ -26,7 +26,6 @@
 }
 .section {
     display: none;
-    color: #e8c96b;
     padding: 2rem 2rem 0;
 }
 .section.active {
