@@ -1,0 +1,23 @@
+.nav {
+    background: #132040;
+    display: flex;
+    border-bottom: 1px solid rgba(200, 168, 75, 0.2);
+    flex-wrap: wrap;
+}
+.section {
+    display: none;
+    padding: 2rem 2rem 0;
+}
+.line {
+    border: none;
+    border-top: 0.5px solid var(--color-border-tertiary, #e0e0e0);
+    margin: 0.25rem 0 1.75rem;
+}
+.t-title{
+    font-family: 'Noto Serif JP', serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text-primary, #1a1a1a);
+    margin-bottom: 0.25rem;
+    letter-spacing: 0.03em;
+}
