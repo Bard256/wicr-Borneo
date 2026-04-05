@@ -5,24 +5,26 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ボルネオ島</title>
+</head>
   <nav>
-    <a onclick="show('welcome',this)">ようこそ</a>
-    <a onclick="show('overview',this)">概要</a>
-    <a onclick="show('news',this)">ニュース</a>
-    <a onclick="show('immigration',this)">移民希望について</a>
+    <a class="active", onclick="show('welcome',this)">ようこそ</a>
+    <a class, onclick="show('overview',this)">概要</a>
+    <a class, onclick="show('news',this)">ニュース</a>
+    <a class, onclick="show('immigration',this)">移民希望について</a>
   </nav>
   <div id="welcome" class="section">
     <line></line>
-    <div class="t-title">ボルネオ島へようこそ</div>
+      <div class="t-title">ボルネオ島へようこそ</div>
     <p>マインクラフトサーバー『わいくら』内ボルネオ島ホームページへようこそ！</p>
     <line></line>
     
-</head>
-<body>
+    </head>
+  <body>
   <header>
     <h1>ボルネオ島へようこそ！</h1>
   </header>
-  <script>
+</div>
+  <script> 
     
 function show(id,el){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
@@ -30,6 +32,7 @@ function show(id,el){
   document.getElementById(id).classList.add('active');
   if(el) el.classList.add('active');
 }
+
   </script>
  </body>
 </html>
