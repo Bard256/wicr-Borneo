@@ -9,7 +9,7 @@
   <body>
   <nav class="nav">
     <a class="active", onclick="show('welcome',this)">ようこそ</a>
-    <a class, onclick="show('overview',this)">国家概要</a>
+    <a class="tab_overview", onclick="show('overview',this)">国家概要</a>
     <a class, onclick="show('news',this)">ニュース</a>
     <a class, onclick="show('immigration',this)">移民希望について</a>
   </nav>
@@ -18,7 +18,8 @@
       <div class="t-title">ボルネオ島へようこそ</div>
     <p>
       マインクラフトサーバー『わいくら』内ボルネオ島ホームページへようこそ！
-      ボルネオ島は現在3人の島民が活動する、農業を主力としている国家です。
+      ボルネオ島は現在3人の島民が活動する、農業を主力としている国家です。<br>
+      <a style="color:0000EE", onclick="show('overview',document.getElementByClassName('tab_overview'))">国家概要</a>をぜひご覧ください！
     </p>
     <line></line>
   </div>
@@ -26,6 +27,20 @@
   <div id="overview", class="section">
     <line></line>
     <div class="t-title">国家概要</div>
+      <div class="t-subtitle">基礎情報(2026年4月7日現在)</div>
+    <p>
+      アクティブ人口：3人 (名目上は10人)
+      国土面積：215チャンク
+      首都：サンピット ("/t spawn サンピット"よりお越しください！)
+    </p>
+    <div class="t-subtitle">産業</div>
+    <p>
+      ボルネオ島は農業を中心産業とし、畑のレンタルも行っています。現在ボルネオ島にある畑は以下の通りです。
+      ①大規模ネザーウォート畑(総面積：35,840m²、<a href= "https://discord.com/channels/1428227734248886284/1445748824231514154/1445748824231514154" >レンタル情報はこちら！</a>)
+      ②ジャガイモ畑(総面積：1,920m²)
+      ③小麦畑(総面積：7,168m²)
+      ④大規模小麦畑(現在建設中！将来的にレンタルを可能にする予定です)
+    </p>
   </div>
 
 
