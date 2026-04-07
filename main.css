@@ -33,8 +33,8 @@
 }
 .line {
     border: none;
-    border-top: 0.5px solid var(--color-border-tertiary, #e0e0e0);
-    margin: 0.25rem 0 1.75rem;
+    border-top: 5px solid var(--color-border-tertiary, #e0e0e0);
+    margin: 1rem 0 1rem;
 }
 .t-title{
     font-family: 'Noto Serif JP', serif;
