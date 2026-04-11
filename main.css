@@ -38,7 +38,7 @@
 }
 .space {
       border: none;
-    border-top: 0px solid var(--color-border-tertiary, #e0e0e0);
+    border-top: 5px solid var(--color-border-tertiary, #ffffff);
     margin: 1rem 0 1rem;
 }
 .t-title{
