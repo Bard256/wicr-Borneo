@@ -1,12 +1,11 @@
-<header class="site-header">
-  <a href="{{ '/' | relative_url }}" class="site-title">ボルネオ島</a>
+<div id="auth-status"></div>
+<button id="discord-login-btn">Discordでログイン</button>
 
-  <nav>
-    <a href="{{ '/' | relative_url }}">ホーム</a>
-    <a href="{{ '/farm.html' | relative_url }}">畑の予約</a>
-    <a href="{{ '/bank.html' | relative_url }}">銀行</a>
-  </nav>
-
-  <div id="auth-status"></div>
-  <button id="discord-login-btn">Discordでログイン</button>
-</header>
+<nav class="nav">
+  <a class="nav-tab active" data-tab="welcome" href="{{ '/' | relative_url }}#welcome">ようこそ</a>
+  <a class="nav-tab" data-tab="overview" href="{{ '/' | relative_url }}#overview">国家概要</a>
+  <a class="nav-tab" data-tab="news" href="{{ '/' | relative_url }}#news">ニュース</a>
+  <a class="nav-tab" data-tab="immigration" href="{{ '/' | relative_url }}#immigration">移民希望について</a>
+  <a href="{{ '/farm.html' | relative_url }}">畑の予約</a>
+  <a href="{{ '/bank.html' | relative_url }}">銀行</a>
+</nav>
