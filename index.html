@@ -1,101 +1,64 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <link href="main.css" rel="stylesheet"/>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ボルネオ島</title>
-</head>
-  <!-- ログイン状態を表示する場所 -->
-<div id="auth-status"></div>
-<button id="discord-login-btn">Discordでログイン</button>
-<!-- ログイン処理スクリプトの読み込み(パスは実際に配置した場所に合わせてください) -->
-<script src="borneo-auth.js"></script>
-  <body>
-  <nav class="nav">
-    <a class="active", onclick="show('welcome',this)">ようこそ</a>
-    <a class="tab_overview", onclick="show('overview',this)">国家概要</a>
-    <a class, onclick="show('news',this)">ニュース</a>
-    <a class, onclick="show('immigration',this)">移民希望について</a>
-  </nav>
-  <div id="welcome", class="section active">
-    <hr class="line"/>
-      <div class="t-title">ボルネオ島へようこそ</div>
-    <p>
-      マインクラフトサーバー『わいくら』内ボルネオ島ホームページへようこそ！
-      ボルネオ島は現在3人の島民が活動する、農業を主力としている国家です。<br>
-      <a onclick="show('overview',document.getElementByClassName('tab_overview')[0])">国家概要</a>をぜひご覧ください！
-    </p>
-  </div>
-    
-  <div id="overview", class="section">
-    <hr class="line"/>
-    <div class="t-title">国家概要</div>
-        <hr class="line"/>
-      <div class="t-subtitle">基礎情報(2026年4月12日現在)</div>
-    <p>
-      アクティブ人口：3人 (名目上は10人)<br>
-      国土面積：215チャンク<br>
-      首都：サンピット ("/t spawn サンピット"よりお越しください！)
-    </p>
-    <hr class="line"/>
-    <div class="t-subtitle">産業</div>
-    <p>
-      ボルネオ島は農業を中心産業とし、畑のレンタルも行っています。現在ボルネオ島にある畑は以下の通りです。<br>
-      ①大規模ネザーウォート畑(総面積：35,840m²、<a href= "https://discord.com/channels/1428227734248886284/1445748824231514154/1445748824231514154" >レンタル情報はこちら！</a>)<br>
-      ②ジャガイモ畑(総面積：1,920m²)<br>
-      ③小麦畑(総面積：7,168m²)<br>
-      ④大規模小麦畑(現在建設中！将来的にレンタルを可能にする予定です)
-    </p>
-  </div>
-    
-    <div id="news", class="section">
-      <hr class="line"/>
-    <div class="t-title">ニュース</div>
-      <hr class="line"/>
-    <div class="t-subtitle">ホームページを公開しました(4月12日)</div>
-    <p>
-      ボルネオ島のホームページを公開しました。
-    </p>
-    <hr class="line"/>
-    </div>
-    
-    <div id="immigration", class="section">
-    <div class="t-title">移民希望について</div>
-    <hr class="line"/>
-    <div class="t-subtitle">移民について</div>
-    <p>
-      我々は島への移民を歓迎しています。ボルネオ島の島民には、以下のサービスを提供しています。<br>
-      ①木材・食糧・鉄・ダイヤモンドなどの基本的な資材を共有倉庫から自由に取ることができます<br>
-      ②畑を無料で使うことができます<br>
-      ③骨粉製造装置を自由に利用することができます(現在国で骨粉の買取を行っていて、全て売れば時給1.8万ドル程度稼げます)
-    </p>
-      <hr class="line"/>
-    <div class="t-subtitle">移民の流れ</div>
-    <p>
-      移民を希望の方は、以下にあるリンクよりボルネオ島Discordに参加し、#島民申請のチャンネルから申請を行ってください。<br>
-      <a href="https://discord.gg/cBNcNfUxSJ">ボルネオ島Discordサーバー</a>
-      <hr class="line"/>
-    <iframe src="https://ptb.discord.com/widget?id=1482532509416816662&theme=dark" width="350" height="500" allowtransparency="true" frameborder="0" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"></iframe>
-    </p>
-    </div>
+---
+layout: default
+title: ボルネオ島
+---
 
+<div id="welcome" class="section active">
+  <hr class="line">
+  <div class="t-title">ボルネオ島へようこそ</div>
+  <p>
+    マインクラフトサーバー『わいくら』内ボルネオ島ホームページへようこそ！<br>
+    ボルネオ島は現在3人の島民が活動する、農業を主力としている国家です。<br>
+    <a class="nav-tab" data-tab="overview" href="#overview">国家概要</a>をぜひご覧ください！
+  </p>
+</div>
 
+<div id="overview" class="section">
+  <hr class="line">
+  <div class="t-title">国家概要</div>
+  <hr class="line">
+  <div class="t-subtitle">基礎情報(2026年4月12日現在)</div>
+  <p>
+    アクティブ人口：3人 (名目上は10人)<br>
+    国土面積：215チャンク<br>
+    首都：サンピット ("/t spawn サンピット"よりお越しください！)
+  </p>
+  <hr class="line">
+  <div class="t-subtitle">産業</div>
+  <p>
+    ボルネオ島は農業を中心産業とし、畑のレンタルも行っています。現在ボルネオ島にある畑は以下の通りです。<br>
+    ①大規模ネザーウォート畑(総面積：35,840m²、<a href="https://discord.com/channels/1428227734248886284/1445748824231514154/1445748824231514154">レンタル情報はこちら！</a>)<br>
+    ②ジャガイモ畑(総面積：1,920m²)<br>
+    ③小麦畑(総面積：7,168m²)<br>
+    ④大規模小麦畑(現在建設中！将来的にレンタルを可能にする予定です)
+  </p>
+</div>
 
+<div id="news" class="section">
+  <hr class="line">
+  <div class="t-title">ニュース</div>
+  <hr class="line">
+  <div class="t-subtitle">ホームページを公開しました(4月12日)</div>
+  <p>ボルネオ島のホームページを公開しました。</p>
+  <hr class="line">
+</div>
 
-  
-  <script> 
-    
-function show(id,el){
-  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.nav a').forEach(a=>a.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  if(el) el.classList.add('active');
-}
-
-  </script>
- </body>
-</html>
-
-
-<!-- nothing here hehe>
+<div id="immigration" class="section">
+  <div class="t-title">移民希望について</div>
+  <hr class="line">
+  <div class="t-subtitle">移民について</div>
+  <p>
+    我々は島への移民を歓迎しています。ボルネオ島の島民には、以下のサービスを提供しています。<br>
+    ①木材・食糧・鉄・ダイヤモンドなどの基本的な資材を共有倉庫から自由に取ることができます<br>
+    ②畑を無料で使うことができます<br>
+    ③骨粉製造装置を自由に利用することができます(現在国で骨粉の買取を行っていて、全て売れば時給1.8万ドル程度稼げます)
+  </p>
+  <hr class="line">
+  <div class="t-subtitle">移民の流れ</div>
+  <p>
+    移民を希望の方は、以下にあるリンクよりボルネオ島Discordに参加し、#島民申請のチャンネルから申請を行ってください。<br>
+    <a href="https://discord.gg/cBNcNfUxSJ">ボルネオ島Discordサーバー</a>
+  </p>
+  <hr class="line">
+  <iframe src="https://ptb.discord.com/widget?id=1482532509416816662&theme=dark" width="350" height="500" allowtransparency="true" frameborder="0" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"></iframe>
+</div>
