@@ -12,7 +12,7 @@
  */
 
 // ↓ Workerをデプロイした後に表示されるURLに書き換えてください
-const WORKER_BASE_URL = "https://borneo-auth-worker.bard256.workers.dev";
+const WORKER_BASE_URL = "https://borneo-auth-worker.YOUR-SUBDOMAIN.workers.dev";
 
 const STORAGE_KEY = "borneo_session_token";
 
@@ -100,5 +100,16 @@ function escapeHtml(str) {
   div.textContent = str;
   return div.innerHTML;
 }
+
+// 他のページ(farm.html, bank.htmlなど)からログイン情報を使うための共通窓口
+window.BorneoAuth = {
+  WORKER_BASE_URL,
+  getToken() {
+    return localStorage.getItem(STORAGE_KEY);
+  },
+  isLoggedIn() {
+    return !!localStorage.getItem(STORAGE_KEY);
+  },
+};
 
 document.addEventListener("DOMContentLoaded", initBorneoAuth);
