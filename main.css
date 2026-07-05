@@ -61,3 +61,17 @@ a.active {
     color: #e8c96b;
     border-bottom-color: #c8a84b;
 }
+
+.borneo-auth-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.9em;
+}
+.borneo-auth-islander {
+  background: #ffd54f;
+  color: #333;
+}
+.borneo-auth-visitor {
+  background: #b0bec5;
+  color: #333;
+}
