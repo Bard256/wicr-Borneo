@@ -4,4 +4,127 @@ title: 畑の予約
 ---
 
 <h1>畑の利用予約</h1>
-<p>準備中です。</p>
+<p>予約したい畑を選び、利用したい日時を指定してください。ログインしていれば、島民・訪問者どちらでも予約できます。</p>
+
+<div id="farm-app">
+  <label for="farm-select">畑を選ぶ:</label>
+  <select id="farm-select"></select>
+
+  <h2>現在の予約状況</h2>
+  <ul id="reservation-list">
+    <li>読み込み中...</li>
+  </ul>
+
+  <h2>新しく予約する</h2>
+  <div id="reserve-form">
+    <label>
+      開始日時:
+      <input type="datetime-local" id="start-at">
+    </label>
+    <label>
+      終了日時:
+      <input type="datetime-local" id="end-at">
+    </label>
+    <button id="reserve-btn">予約する</button>
+  </div>
+  <p id="reserve-message"></p>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  const WORKER_BASE_URL = window.BorneoAuth.WORKER_BASE_URL;
+  const farmSelect = document.getElementById("farm-select");
+  const reservationList = document.getElementById("reservation-list");
+  const reserveBtn = document.getElementById("reserve-btn");
+  const reserveMessage = document.getElementById("reserve-message");
+
+  let farms = [];
+
+  // 1. 畑の一覧を取得
+  async function loadFarms() {
+    const res = await fetch(`${WORKER_BASE_URL}/farm/list`);
+    const data = await res.json();
+    farms = data.farms || [];
+    farmSelect.innerHTML = farms
+      .map((f) => `<option value="${f.id}">${escapeHtml(f.name)}</option>`)
+      .join("");
+  }
+
+  // 2. 選択中の畑の予約一覧を取得
+  async function loadReservations() {
+    const farmId = farmSelect.value;
+    if (!farmId) return;
+    reservationList.innerHTML = "<li>読み込み中...</li>";
+
+    const res = await fetch(
+      `${WORKER_BASE_URL}/farm/reservations?farm_id=${encodeURIComponent(farmId)}`
+    );
+    const data = await res.json();
+    const reservations = data.reservations || [];
+
+    if (reservations.length === 0) {
+      reservationList.innerHTML = "<li>現在、予約はありません</li>";
+      return;
+    }
+
+    reservationList.innerHTML = reservations
+      .map((r) => {
+        const start = new Date(r.start_at).toLocaleString("ja-JP");
+        const end = new Date(r.end_at).toLocaleString("ja-JP");
+        return `<li>${escapeHtml(r.username)} さん: ${start} 〜 ${end}</li>`;
+      })
+      .join("");
+  }
+
+  // 3. 予約ボタン
+  reserveBtn.addEventListener("click", async () => {
+    reserveMessage.textContent = "";
+
+    if (!window.BorneoAuth.isLoggedIn()) {
+      reserveMessage.textContent = "予約するにはDiscordでログインしてください。";
+      return;
+    }
+
+    const startAt = document.getElementById("start-at").value;
+    const endAt = document.getElementById("end-at").value;
+    if (!startAt || !endAt) {
+      reserveMessage.textContent = "開始日時と終了日時を入力してください。";
+      return;
+    }
+
+    const token = window.BorneoAuth.getToken();
+    const res = await fetch(`${WORKER_BASE_URL}/farm/reserve`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        farm_id: farmSelect.value,
+        start_at: new Date(startAt).toISOString(),
+        end_at: new Date(endAt).toISOString(),
+      }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      reserveMessage.textContent = "予約できませんでした: " + (data.error || "不明なエラー");
+      return;
+    }
+
+    reserveMessage.textContent = "予約が完了しました！";
+    await loadReservations();
+  });
+
+  farmSelect.addEventListener("change", loadReservations);
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  await loadFarms();
+  await loadReservations();
+});
+</script>
