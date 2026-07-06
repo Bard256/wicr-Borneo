@@ -15,6 +15,7 @@ title: 管理画面
       <th>開始</th>
       <th>終了</th>
       <th>金額</th>
+      <th>操作</th>
     </tr>
   </thead>
   <tbody id="admin-table-body"></tbody>
@@ -26,12 +27,17 @@ title: 管理画面
     padding: 0.5em 0.8em;
     text-align: left;
     font-size: 0.9em;
+    vertical-align: middle;
   }
   #admin-table thead th {
     background: var(--wood);
     color: #fff;
   }
   #admin-table tbody tr:nth-child(even) { background: #F7F9F1; }
+  #admin-table input[type="number"] { width: 3.5em; }
+  #admin-table input[type="datetime-local"] { width: 12em; }
+  #admin-table button { font-size: 0.85em; padding: 0.3em 0.6em; margin-right: 4px; }
+  .admin-row-message { font-size: 0.85em; color: var(--occupied); margin-top: 4px; }
 </style>
 
 <script>
@@ -41,53 +47,161 @@ document.addEventListener("DOMContentLoaded", async () => {
   const table = document.getElementById("admin-table");
   const tbody = document.getElementById("admin-table-body");
 
-  if (!window.BorneoAuth.isLoggedIn()) {
-    statusEl.textContent = "この画面を見るにはDiscordでログインしてください。";
-    return;
-  }
-
-  const token = window.BorneoAuth.getToken();
-  const res = await fetch(`${WORKER_BASE_URL}/farm/admin/reservations`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const data = await res.json();
-
-  if (!res.ok) {
-    statusEl.textContent = "表示できません: " + (data.error || "不明なエラー");
-    return;
-  }
-
-  const reservations = data.reservations || [];
-  if (reservations.length === 0) {
-    statusEl.textContent = "現在、予約はありません。";
-    return;
-  }
-
-  statusEl.style.display = "none";
-  table.style.display = "";
-
-  tbody.innerHTML = reservations
-    .map((r) => {
-      const start = new Date(r.start_at).toLocaleString("ja-JP");
-      const end = new Date(r.end_at).toLocaleString("ja-JP");
-      const layerLabel = r.start_layer === r.end_layer
-        ? `${r.start_layer}層`
-        : `${r.start_layer}〜${r.end_layer}層`;
-      return `<tr>
-        <td>${escapeHtml(r.farm_name)}</td>
-        <td>${escapeHtml(r.username)}</td>
-        <td>${layerLabel}</td>
-        <td>${start}</td>
-        <td>${end}</td>
-        <td>${Number(r.price).toLocaleString()} ドル</td>
-      </tr>`;
-    })
-    .join("");
+  let reservations = [];
 
   function escapeHtml(str) {
     const div = document.createElement("div");
     div.textContent = str || "";
     return div.innerHTML;
   }
+
+  // datetime-local の入力欄に入れられる形式(ローカル時刻、秒なし)に変換
+  function toLocalInputValue(isoStr) {
+    const d = new Date(isoStr);
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  function layerLabel(r) {
+    return r.start_layer === r.end_layer ? `${r.start_layer}層` : `${r.start_layer}〜${r.end_layer}層`;
+  }
+
+  async function loadReservations() {
+    const token = window.BorneoAuth.getToken();
+    const res = await fetch(`${WORKER_BASE_URL}/farm/admin/reservations`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      statusEl.textContent = "表示できません: " + (data.error || "不明なエラー");
+      table.style.display = "none";
+      return;
+    }
+
+    reservations = data.reservations || [];
+    if (reservations.length === 0) {
+      statusEl.textContent = "現在、予約はありません。";
+      table.style.display = "none";
+      return;
+    }
+
+    statusEl.style.display = "none";
+    table.style.display = "";
+    renderRows();
+  }
+
+  function renderRows() {
+    tbody.innerHTML = reservations
+      .map(
+        (r) => `
+      <tr data-id="${r.id}">
+        <td>${escapeHtml(r.farm_name)}</td>
+        <td>${escapeHtml(r.username)}</td>
+        <td>${layerLabel(r)}</td>
+        <td>${new Date(r.start_at).toLocaleString("ja-JP")}</td>
+        <td>${new Date(r.end_at).toLocaleString("ja-JP")}</td>
+        <td>${Number(r.price).toLocaleString()} ドル</td>
+        <td>
+          <button class="edit-btn">編集</button>
+          <button class="delete-btn">削除</button>
+        </td>
+      </tr>`
+      )
+      .join("");
+
+    tbody.querySelectorAll(".edit-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const tr = e.target.closest("tr");
+        const id = Number(tr.dataset.id);
+        const r = reservations.find((x) => x.id === id);
+        renderEditRow(tr, r);
+      });
+    });
+
+    tbody.querySelectorAll(".delete-btn").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        const tr = e.target.closest("tr");
+        const id = Number(tr.dataset.id);
+        if (!confirm("この予約を削除します。よろしいですか?")) return;
+
+        const token = window.BorneoAuth.getToken();
+        const res = await fetch(`${WORKER_BASE_URL}/farm/admin/cancel`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ reservation_id: id }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alert("削除できませんでした: " + (data.error || "不明なエラー"));
+          return;
+        }
+        await loadReservations();
+      });
+    });
+  }
+
+  function renderEditRow(tr, r) {
+    tr.innerHTML = `
+      <td>${escapeHtml(r.farm_name)}</td>
+      <td>${escapeHtml(r.username)}</td>
+      <td>
+        <input type="number" class="edit-start-layer" value="${r.start_layer}" min="1">
+        〜
+        <input type="number" class="edit-end-layer" value="${r.end_layer}" min="1">
+      </td>
+      <td><input type="datetime-local" class="edit-start-at" value="${toLocalInputValue(r.start_at)}"></td>
+      <td><input type="datetime-local" class="edit-end-at" value="${toLocalInputValue(r.end_at)}"></td>
+      <td>${Number(r.price).toLocaleString()} ドル(保存時に再計算)</td>
+      <td>
+        <button class="save-btn">保存</button>
+        <button class="cancel-edit-btn">キャンセル</button>
+        <div class="admin-row-message"></div>
+      </td>
+    `;
+
+    tr.querySelector(".cancel-edit-btn").addEventListener("click", () => renderRows());
+
+    tr.querySelector(".save-btn").addEventListener("click", async () => {
+      const startLayer = Number(tr.querySelector(".edit-start-layer").value);
+      const endLayer = Number(tr.querySelector(".edit-end-layer").value);
+      const startAt = tr.querySelector(".edit-start-at").value;
+      const endAt = tr.querySelector(".edit-end-at").value;
+      const msgEl = tr.querySelector(".admin-row-message");
+
+      if (!startAt || !endAt) {
+        msgEl.textContent = "開始・終了の日時を入力してください。";
+        return;
+      }
+
+      const token = window.BorneoAuth.getToken();
+      const res = await fetch(`${WORKER_BASE_URL}/farm/admin/update`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          reservation_id: r.id,
+          start_layer: startLayer,
+          end_layer: endLayer,
+          start_at: new Date(startAt).toISOString(),
+          end_at: new Date(endAt).toISOString(),
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        msgEl.textContent = "保存できませんでした: " + (data.error || "不明なエラー");
+        return;
+      }
+
+      await loadReservations();
+    });
+  }
+
+  if (!window.BorneoAuth.isLoggedIn()) {
+    statusEl.textContent = "この画面を見るにはDiscordでログインしてください。";
+    return;
+  }
+
+  await loadReservations();
 });
 </script>
