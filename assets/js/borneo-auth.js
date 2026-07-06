@@ -12,7 +12,7 @@
  */
 
 // ↓ Workerをデプロイした後に表示されるURLに書き換えてください
-const WORKER_BASE_URL = "https://borneo-auth-worker.YOUR-SUBDOMAIN.workers.dev";
+const WORKER_BASE_URL = "https://borneo-auth-worker.bard256.workers.dev";
 
 const STORAGE_KEY = "borneo_session_token";
 
