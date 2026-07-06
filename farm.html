@@ -48,6 +48,12 @@ title: 畑の予約
     <button id="cancel-selection-btn">選択をやり直す</button>
     <p id="reserve-message"></p>
   </div>
+
+  <div id="my-reservations-section" style="margin-top:2em;">
+    <h2>自分の予約一覧</h2>
+    <p id="my-reservations-status">ログインすると、自分の予約を確認・キャンセルできます。</p>
+    <ul id="my-reservations-list" style="display:none; list-style:none; padding:0;"></ul>
+  </div>
 </div>
 
 <style>
@@ -99,6 +105,18 @@ title: 畑の予約
   .cell-selected { background: var(--green) !important; }
 
   #selection-panel { margin-top: 1.5em; padding: 1.4em 1.6em; border: 2px solid var(--line); background: var(--surface); }
+
+  #my-reservations-list li {
+    border: 2px solid var(--line);
+    background: var(--surface);
+    padding: 0.8em 1em;
+    margin-bottom: 0.6em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5em;
+  }
 </style>
 
 <script>
@@ -121,6 +139,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const confirmBtn = document.getElementById("confirm-btn");
   const cancelSelectionBtn = document.getElementById("cancel-selection-btn");
   const reserveMessage = document.getElementById("reserve-message");
+  const myReservationsStatus = document.getElementById("my-reservations-status");
+  const myReservationsList = document.getElementById("my-reservations-list");
 
   let farms = [];
   let currentFarm = null;
@@ -386,6 +406,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     selectionPanel.style.display = "none";
     await loadReservations();
     renderGrid();
+    await loadMyReservations();
   });
 
   cancelSelectionBtn.addEventListener("click", () => {
@@ -433,10 +454,81 @@ document.addEventListener("DOMContentLoaded", async () => {
     return div.innerHTML;
   }
 
+  // --- 自分の予約一覧 -------------------------------------------------------
+  async function loadMyReservations() {
+    if (!window.BorneoAuth.isLoggedIn()) {
+      myReservationsStatus.textContent = "ログインすると、自分の予約を確認・キャンセルできます。";
+      myReservationsStatus.style.display = "";
+      myReservationsList.style.display = "none";
+      return;
+    }
+
+    const token = window.BorneoAuth.getToken();
+    const res = await fetch(`${WORKER_BASE_URL}/farm/my-reservations`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      myReservationsStatus.textContent = "予約一覧を取得できませんでした: " + (data.error || "不明なエラー");
+      myReservationsStatus.style.display = "";
+      myReservationsList.style.display = "none";
+      return;
+    }
+
+    const myReservations = data.reservations || [];
+    if (myReservations.length === 0) {
+      myReservationsStatus.textContent = "現在、予約はありません。";
+      myReservationsStatus.style.display = "";
+      myReservationsList.style.display = "none";
+      return;
+    }
+
+    myReservationsStatus.style.display = "none";
+    myReservationsList.style.display = "";
+    myReservationsList.innerHTML = myReservations
+      .map((r) => {
+        const start = new Date(r.start_at).toLocaleString("ja-JP");
+        const end = new Date(r.end_at).toLocaleString("ja-JP");
+        const layerLabel = r.start_layer === r.end_layer
+          ? `${r.start_layer}層`
+          : `${r.start_layer}〜${r.end_layer}層`;
+        return `<li data-id="${r.id}">
+          <span>${escapeHtml(r.farm_name)} / ${layerLabel} / ${start} 〜 ${end} / ${Number(r.price).toLocaleString()}ドル</span>
+          <button class="my-cancel-btn">キャンセル</button>
+        </li>`;
+      })
+      .join("");
+
+    myReservationsList.querySelectorAll(".my-cancel-btn").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        const li = e.target.closest("li");
+        const id = Number(li.dataset.id);
+        if (!confirm("この予約をキャンセルします。よろしいですか?")) return;
+
+        const token = window.BorneoAuth.getToken();
+        const res = await fetch(`${WORKER_BASE_URL}/farm/cancel`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ reservation_id: id }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alert("キャンセルできませんでした: " + (data.error || "不明なエラー"));
+          return;
+        }
+        await loadReservations();
+        await loadMyReservations();
+        renderGrid();
+      });
+    });
+  }
+
   // --- 初期化 ---------------------------------------------------------------
   originDateInput.value = formatDateInput(originDate);
   await loadFarms();
   await loadReservations();
   renderGrid();
-});//
+  await loadMyReservations();
+});
 </script>
