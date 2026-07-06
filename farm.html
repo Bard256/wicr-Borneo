@@ -73,6 +73,10 @@ title: 畑の予約
     color: #fff;
     font-weight: 500;
   }
+  #farm-grid thead th.date-header {
+    background: var(--green-dark);
+    border-left: 2px solid var(--line);
+  }
   #farm-grid th.layer-label, #farm-grid td.layer-label {
     position: sticky;
     left: 0;
@@ -190,13 +194,29 @@ document.addEventListener("DOMContentLoaded", async () => {
     gridTable.style.display = "";
 
     const totalLayers = currentFarm.total_layers;
-    let html = "<thead><tr><th class='layer-label'>層 \\ 時刻</th>";
-    for (let c = 0; c < HOURS_TO_SHOW; c++) {
+
+    // ヘッダー1行目: 日付(同じ日はまとめて1セルに)
+    let html = "<thead><tr><th class='layer-label' rowspan='2'>層 \\ 時刻</th>";
+    let c = 0;
+    while (c < HOURS_TO_SHOW) {
       const d = colToDate(c);
-      const label = d.getHours() === 0
-        ? `${d.getMonth() + 1}/${d.getDate()}`
-        : `${d.getHours()}時`;
-      html += `<th>${label}</th>`;
+      const dateKey = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      let span = 1;
+      while (c + span < HOURS_TO_SHOW) {
+        const d2 = colToDate(c + span);
+        const key2 = `${d2.getFullYear()}-${d2.getMonth()}-${d2.getDate()}`;
+        if (key2 !== dateKey) break;
+        span++;
+      }
+      html += `<th class="date-header" colspan="${span}">${d.getMonth() + 1}/${d.getDate()}</th>`;
+      c += span;
+    }
+    html += "</tr>";
+
+    // ヘッダー2行目: 時刻
+    html += "<tr>";
+    for (let c2 = 0; c2 < HOURS_TO_SHOW; c2++) {
+      html += `<th>${colToDate(c2).getHours()}時</th>`;
     }
     html += "</tr></thead><tbody>";
 
