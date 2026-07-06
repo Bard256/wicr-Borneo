@@ -4,43 +4,130 @@ title: 畑の予約
 ---
 
 <h1>畑の利用予約</h1>
-<p>予約したい畑を選び、利用したい日時を指定してください。ログインしていれば、島民・訪問者どちらでも予約できます。</p>
+<p>
+  マスは「1層 × 1時間」を表します。空いているマスを2回クリックして範囲を選ぶと、
+  見積もり金額を確認したうえで予約できます。予約は<strong>今から24時間後以降</strong>のみ可能です
+  (直近24時間分は状況の確認だけできます)。
+</p>
 
 <div id="farm-app">
-  <label for="farm-select">畑を選ぶ:</label>
-  <select id="farm-select"></select>
-
-  <h2>現在の予約状況</h2>
-  <ul id="reservation-list">
-    <li>読み込み中...</li>
-  </ul>
-
-  <h2>新しく予約する</h2>
-  <div id="reserve-form">
+  <div class="farm-controls">
     <label>
-      開始日時:
-      <input type="datetime-local" id="start-at">
+      畑:
+      <select id="farm-select"></select>
     </label>
     <label>
-      終了日時:
-      <input type="datetime-local" id="end-at">
+      表示開始日:
+      <input type="date" id="origin-date">
     </label>
-    <button id="reserve-btn">予約する</button>
+    <button id="today-btn">今日に戻す</button>
   </div>
-  <p id="reserve-message"></p>
+
+  <div class="farm-legend">
+    <span class="legend-box available"></span> 空き
+    <span class="legend-box occupied"></span> 予約済み
+    <span class="legend-box unbookable"></span> 予約対象外(未完成の層 / 24時間以内)
+    <span class="legend-box selected"></span> 選択中
+  </div>
+
+  <div id="grid-wrapper">
+    <p id="grid-loading">読み込み中...</p>
+    <table id="farm-grid" style="display:none;"></table>
+  </div>
+
+  <div id="selection-panel" style="display:none;">
+    <h2>予約内容の確認</h2>
+    <p id="selection-summary"></p>
+    <label>
+      開始時刻の「分」を調整(任意):
+      <input type="number" id="start-minute" min="0" max="59" value="0" style="width:4em;"> 分
+    </label>
+    <p id="quote-result"></p>
+    <button id="quote-btn">見積もりを見る</button>
+    <button id="confirm-btn" style="display:none;">この内容で予約する</button>
+    <button id="cancel-selection-btn">選択をやり直す</button>
+    <p id="reserve-message"></p>
+  </div>
 </div>
+
+<style>
+  .farm-controls, .farm-legend { margin: 0.8em 0; display: flex; gap: 1em; align-items: center; flex-wrap: wrap; }
+  .legend-box { display: inline-block; width: 14px; height: 14px; vertical-align: middle; margin-right: 3px; border: 1px solid #999; }
+  .legend-box.available { background: #ffffff; }
+  .legend-box.occupied { background: #e57373; }
+  .legend-box.unbookable { background: #cfcfcf; }
+  .legend-box.selected { background: #81c784; }
+
+  #grid-wrapper { overflow-x: auto; border: 1px solid #ccc; max-width: 100%; }
+  #farm-grid { border-collapse: collapse; font-size: 0.75em; }
+  #farm-grid th, #farm-grid td {
+    border: 1px solid #ddd;
+    width: 26px;
+    height: 22px;
+    text-align: center;
+    padding: 0;
+    white-space: nowrap;
+  }
+  #farm-grid th.layer-label, #farm-grid td.layer-label {
+    position: sticky;
+    left: 0;
+    background: #fafafa;
+    font-weight: bold;
+    width: 3.5em;
+  }
+  .cell-available { background: #ffffff; cursor: pointer; }
+  .cell-available:hover { background: #e0f2f1; }
+  .cell-occupied { background: #e57373; cursor: not-allowed; }
+  .cell-unbookable { background: #cfcfcf; cursor: not-allowed; }
+  .cell-selected { background: #81c784 !important; }
+
+  #selection-panel { margin-top: 1em; padding: 1em; border: 1px solid #ccc; }
+</style>
 
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
   const WORKER_BASE_URL = window.BorneoAuth.WORKER_BASE_URL;
+  const HOURS_TO_SHOW = 72;
+  const LEAD_HOURS = 24; // Worker側の FARM_BOOKING_LEAD_HOURS と合わせてください
+
   const farmSelect = document.getElementById("farm-select");
-  const reservationList = document.getElementById("reservation-list");
-  const reserveBtn = document.getElementById("reserve-btn");
+  const originDateInput = document.getElementById("origin-date");
+  const todayBtn = document.getElementById("today-btn");
+  const gridLoading = document.getElementById("grid-loading");
+  const gridTable = document.getElementById("farm-grid");
+
+  const selectionPanel = document.getElementById("selection-panel");
+  const selectionSummary = document.getElementById("selection-summary");
+  const startMinuteInput = document.getElementById("start-minute");
+  const quoteResult = document.getElementById("quote-result");
+  const quoteBtn = document.getElementById("quote-btn");
+  const confirmBtn = document.getElementById("confirm-btn");
+  const cancelSelectionBtn = document.getElementById("cancel-selection-btn");
   const reserveMessage = document.getElementById("reserve-message");
 
   let farms = [];
+  let currentFarm = null;
+  let originDate = startOfHour(new Date());
+  let reservations = [];
+  let pendingStart = null; // { layer, colIndex }
+  let selection = null; // { startLayer, endLayer, startCol, endCol }
+  let currentQuote = null;
 
-  // 1. 畑の一覧を取得
+  function startOfHour(d) {
+    const r = new Date(d);
+    r.setMinutes(0, 0, 0);
+    return r;
+  }
+
+  function colToDate(colIndex) {
+    return new Date(originDate.getTime() + colIndex * 60 * 60 * 1000);
+  }
+
+  function formatDateInput(d) {
+    return d.toISOString().slice(0, 10);
+  }
+
+  // --- データ取得 -------------------------------------------------------
   async function loadFarms() {
     const res = await fetch(`${WORKER_BASE_URL}/farm/list`);
     const data = await res.json();
@@ -48,61 +135,209 @@ document.addEventListener("DOMContentLoaded", async () => {
     farmSelect.innerHTML = farms
       .map((f) => `<option value="${f.id}">${escapeHtml(f.name)}</option>`)
       .join("");
+    currentFarm = farms[0];
   }
 
-  // 2. 選択中の畑の予約一覧を取得
   async function loadReservations() {
-    const farmId = farmSelect.value;
-    if (!farmId) return;
-    reservationList.innerHTML = "<li>読み込み中...</li>";
-
+    if (!currentFarm) return;
+    const from = originDate.toISOString();
+    const to = new Date(originDate.getTime() + HOURS_TO_SHOW * 60 * 60 * 1000).toISOString();
     const res = await fetch(
-      `${WORKER_BASE_URL}/farm/reservations?farm_id=${encodeURIComponent(farmId)}`
+      `${WORKER_BASE_URL}/farm/reservations?farm_id=${encodeURIComponent(currentFarm.id)}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`
     );
     const data = await res.json();
-    const reservations = data.reservations || [];
+    reservations = data.reservations || [];
+  }
 
-    if (reservations.length === 0) {
-      reservationList.innerHTML = "<li>現在、予約はありません</li>";
+  // 指定した層・時間コマが「予約済み」かどうか
+  function isOccupied(layer, colIndex) {
+    const cellStart = colToDate(colIndex).getTime();
+    const cellEnd = cellStart + 60 * 60 * 1000;
+    return reservations.some((r) => {
+      if (layer < r.start_layer || layer > r.end_layer) return false;
+      const rStart = new Date(r.start_at).getTime();
+      const rEnd = new Date(r.end_at).getTime();
+      return cellStart < rEnd && cellEnd > rStart;
+    });
+  }
+
+  function isBookableLayer(layer) {
+    return layer >= currentFarm.bookable_min_layer && layer <= currentFarm.bookable_max_layer;
+  }
+
+  function isTooSoon(colIndex) {
+    const cellStart = colToDate(colIndex).getTime();
+    return cellStart < Date.now() + LEAD_HOURS * 60 * 60 * 1000;
+  }
+
+  // --- グリッド描画 -------------------------------------------------------
+  function renderGrid() {
+    if (!currentFarm) return;
+    gridLoading.style.display = "none";
+    gridTable.style.display = "";
+
+    const totalLayers = currentFarm.total_layers;
+    let html = "<thead><tr><th class='layer-label'>層 \\ 時刻</th>";
+    for (let c = 0; c < HOURS_TO_SHOW; c++) {
+      const d = colToDate(c);
+      const label = d.getHours() === 0
+        ? `${d.getMonth() + 1}/${d.getDate()}`
+        : `${d.getHours()}時`;
+      html += `<th>${label}</th>`;
+    }
+    html += "</tr></thead><tbody>";
+
+    for (let layer = totalLayers; layer >= 1; layer--) {
+      html += `<tr><td class="layer-label">${layer}層</td>`;
+      for (let c = 0; c < HOURS_TO_SHOW; c++) {
+        let cls = "cell-available";
+        let title = "";
+        if (!isBookableLayer(layer)) {
+          cls = "cell-unbookable";
+          title = "この層はまだ予約対象ではありません";
+        } else if (isTooSoon(c)) {
+          cls = "cell-unbookable";
+          title = "24時間以内は予約できません";
+        } else if (isOccupied(layer, c)) {
+          cls = "cell-occupied";
+          const r = reservations.find(
+            (r) => layer >= r.start_layer && layer <= r.end_layer &&
+              colToDate(c).getTime() < new Date(r.end_at).getTime() &&
+              colToDate(c).getTime() + 3600000 > new Date(r.start_at).getTime()
+          );
+          title = r ? `${r.username} さんが予約済み` : "予約済み";
+        }
+        if (selection && isInSelection(layer, c)) cls += " cell-selected";
+        html += `<td class="${cls}" title="${escapeHtml(title)}" data-layer="${layer}" data-col="${c}"></td>`;
+      }
+      html += "</tr>";
+    }
+    html += "</tbody>";
+    gridTable.innerHTML = html;
+
+    gridTable.querySelectorAll("td.cell-available, td.cell-selected").forEach((td) => {
+      td.addEventListener("click", onCellClick);
+    });
+  }
+
+  function isInSelection(layer, col) {
+    if (!selection) return false;
+    return (
+      layer >= selection.startLayer && layer <= selection.endLayer &&
+      col >= selection.startCol && col <= selection.endCol
+    );
+  }
+
+  // --- セル選択のロジック(1回目クリック→2回目クリックで範囲確定) ------------
+  function onCellClick(e) {
+    const layer = Number(e.currentTarget.dataset.layer);
+    const col = Number(e.currentTarget.dataset.col);
+
+    if (!pendingStart) {
+      pendingStart = { layer, col };
+      selection = { startLayer: layer, endLayer: layer, startCol: col, endCol: col };
+      renderGrid();
       return;
     }
 
-    reservationList.innerHTML = reservations
-      .map((r) => {
-        const start = new Date(r.start_at).toLocaleString("ja-JP");
-        const end = new Date(r.end_at).toLocaleString("ja-JP");
-        return `<li>${escapeHtml(r.username)} さん: ${start} 〜 ${end}</li>`;
-      })
-      .join("");
+    const startLayer = Math.min(pendingStart.layer, layer);
+    const endLayer = Math.max(pendingStart.layer, layer);
+    const startCol = Math.min(pendingStart.col, col);
+    const endCol = Math.max(pendingStart.col, col);
+
+    // 範囲内に選択不可・予約済みのマスが含まれていないか確認
+    for (let l = startLayer; l <= endLayer; l++) {
+      for (let c = startCol; c <= endCol; c++) {
+        if (!isBookableLayer(l) || isTooSoon(c) || isOccupied(l, c)) {
+          alert("選択した範囲に予約できないマスが含まれています。選び直してください。");
+          pendingStart = null;
+          selection = null;
+          renderGrid();
+          return;
+        }
+      }
+    }
+
+    selection = { startLayer, endLayer, startCol, endCol };
+    pendingStart = null;
+    renderGrid();
+    showSelectionPanel();
   }
 
-  // 3. 予約ボタン
-  reserveBtn.addEventListener("click", async () => {
-    reserveMessage.textContent = "";
+  function showSelectionPanel() {
+    const layerCount = selection.endLayer - selection.startLayer + 1;
+    const hours = selection.endCol - selection.startCol + 1;
+    const start = colToDate(selection.startCol);
+    const end = colToDate(selection.endCol + 1);
 
+    selectionSummary.textContent =
+      `層: ${selection.startLayer}〜${selection.endLayer}(${layerCount}層) / ` +
+      `時間: ${start.toLocaleString("ja-JP")} 〜 ${end.toLocaleString("ja-JP")}(${hours}時間)`;
+
+    quoteResult.textContent = "";
+    currentQuote = null;
+    confirmBtn.style.display = "none";
+    reserveMessage.textContent = "";
+    startMinuteInput.value = 0;
+    selectionPanel.style.display = "";
+  }
+
+  function getSelectedTimes() {
+    const minuteOffset = Math.max(0, Math.min(59, Number(startMinuteInput.value) || 0));
+    const hours = selection.endCol - selection.startCol + 1;
+    const start = new Date(colToDate(selection.startCol).getTime() + minuteOffset * 60 * 1000);
+    const end = new Date(start.getTime() + hours * 60 * 60 * 1000);
+    return { start, end };
+  }
+
+  // --- 見積もり -----------------------------------------------------------
+  quoteBtn.addEventListener("click", async () => {
+    if (!selection) return;
+    const { start, end } = getSelectedTimes();
+
+    const res = await fetch(`${WORKER_BASE_URL}/farm/quote`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        farm_id: currentFarm.id,
+        start_layer: selection.startLayer,
+        end_layer: selection.endLayer,
+        start_at: start.toISOString(),
+        end_at: end.toISOString(),
+      }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      quoteResult.textContent = "見積もりを取得できませんでした: " + (data.error || "不明なエラー");
+      confirmBtn.style.display = "none";
+      return;
+    }
+
+    currentQuote = data;
+    quoteResult.textContent = `見積もり金額: ${data.price.toLocaleString()} ドル(${data.layer_count}層 × ${data.hours}時間)`;
+    confirmBtn.style.display = "";
+  });
+
+  // --- 予約確定 -----------------------------------------------------------
+  confirmBtn.addEventListener("click", async () => {
+    reserveMessage.textContent = "";
     if (!window.BorneoAuth.isLoggedIn()) {
       reserveMessage.textContent = "予約するにはDiscordでログインしてください。";
       return;
     }
-
-    const startAt = document.getElementById("start-at").value;
-    const endAt = document.getElementById("end-at").value;
-    if (!startAt || !endAt) {
-      reserveMessage.textContent = "開始日時と終了日時を入力してください。";
-      return;
-    }
-
+    const { start, end } = getSelectedTimes();
     const token = window.BorneoAuth.getToken();
+
     const res = await fetch(`${WORKER_BASE_URL}/farm/reserve`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({
-        farm_id: farmSelect.value,
-        start_at: new Date(startAt).toISOString(),
-        end_at: new Date(endAt).toISOString(),
+        farm_id: currentFarm.id,
+        start_layer: selection.startLayer,
+        end_layer: selection.endLayer,
+        start_at: start.toISOString(),
+        end_at: end.toISOString(),
       }),
     });
     const data = await res.json();
@@ -112,19 +347,63 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    reserveMessage.textContent = "予約が完了しました！";
+    reserveMessage.textContent = `予約が完了しました！(金額: ${data.price.toLocaleString()}ドル)`;
+    selection = null;
+    pendingStart = null;
+    selectionPanel.style.display = "none";
     await loadReservations();
+    renderGrid();
   });
 
-  farmSelect.addEventListener("change", loadReservations);
+  cancelSelectionBtn.addEventListener("click", () => {
+    selection = null;
+    pendingStart = null;
+    selectionPanel.style.display = "none";
+    renderGrid();
+  });
+
+  // --- 畑・日付の切り替え ---------------------------------------------------
+  farmSelect.addEventListener("change", async () => {
+    currentFarm = farms.find((f) => f.id === farmSelect.value);
+    selection = null;
+    pendingStart = null;
+    selectionPanel.style.display = "none";
+    await loadReservations();
+    renderGrid();
+  });
+
+  originDateInput.addEventListener("change", async () => {
+    const picked = new Date(originDateInput.value + "T00:00:00");
+    if (!isNaN(picked)) {
+      originDate = startOfHour(picked);
+      selection = null;
+      pendingStart = null;
+      selectionPanel.style.display = "none";
+      await loadReservations();
+      renderGrid();
+    }
+  });
+
+  todayBtn.addEventListener("click", async () => {
+    originDate = startOfHour(new Date());
+    originDateInput.value = formatDateInput(originDate);
+    selection = null;
+    pendingStart = null;
+    selectionPanel.style.display = "none";
+    await loadReservations();
+    renderGrid();
+  });
 
   function escapeHtml(str) {
     const div = document.createElement("div");
-    div.textContent = str;
+    div.textContent = str || "";
     return div.innerHTML;
   }
 
+  // --- 初期化 ---------------------------------------------------------------
+  originDateInput.value = formatDateInput(originDate);
   await loadFarms();
   await loadReservations();
+  renderGrid();
 });
 </script>
