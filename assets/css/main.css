@@ -67,7 +67,8 @@ nav.nav a {
   background: var(--surface);
 }
 nav.nav a:hover { background: #EEF4E6; }
-nav.nav a.nav-tab.active {
+nav.nav a.nav-tab.active,
+nav.nav a.active {
   background: var(--green);
   border-color: var(--green-dark);
   color: #fff;
@@ -106,9 +107,9 @@ nav.nav a.nav-tab.active {
 
 /* メインコンテンツ ------------------------------------------------------- */
 main.container {
-  max-width: 900px;
+  max-width: 960px;
   margin: 0 auto;
-  padding: 2.2rem 1.5rem 4rem;
+  padding: 2.5rem clamp(1.25rem, 6vw, 3.5rem) 4rem;
 }
 
 h1, h2, .t-title, .t-subtitle {
@@ -162,4 +163,3 @@ button:hover { background: #EEF4E6; }
   main.container { padding: 1.5rem 1rem 3rem; }
   #auth-status { margin-left: 0; width: 100%; order: 3; }
 }
-/**/
