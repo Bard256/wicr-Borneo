@@ -1,0 +1,93 @@
+---
+layout: default
+title: 管理画面
+---
+
+<h1>予約状況の確認(管理者専用)</h1>
+<p id="admin-status">読み込み中...</p>
+
+<table id="admin-table" style="display:none; border-collapse:collapse; width:100%;">
+  <thead>
+    <tr>
+      <th>畑</th>
+      <th>ユーザー</th>
+      <th>層</th>
+      <th>開始</th>
+      <th>終了</th>
+      <th>金額</th>
+    </tr>
+  </thead>
+  <tbody id="admin-table-body"></tbody>
+</table>
+
+<style>
+  #admin-table th, #admin-table td {
+    border: 1px solid var(--line-soft);
+    padding: 0.5em 0.8em;
+    text-align: left;
+    font-size: 0.9em;
+  }
+  #admin-table thead th {
+    background: var(--wood);
+    color: #fff;
+  }
+  #admin-table tbody tr:nth-child(even) { background: #F7F9F1; }
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  const WORKER_BASE_URL = window.BorneoAuth.WORKER_BASE_URL;
+  const statusEl = document.getElementById("admin-status");
+  const table = document.getElementById("admin-table");
+  const tbody = document.getElementById("admin-table-body");
+
+  if (!window.BorneoAuth.isLoggedIn()) {
+    statusEl.textContent = "この画面を見るにはDiscordでログインしてください。";
+    return;
+  }
+
+  const token = window.BorneoAuth.getToken();
+  const res = await fetch(`${WORKER_BASE_URL}/farm/admin/reservations`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+
+  if (!res.ok) {
+    statusEl.textContent = "表示できません: " + (data.error || "不明なエラー");
+    return;
+  }
+
+  const reservations = data.reservations || [];
+  if (reservations.length === 0) {
+    statusEl.textContent = "現在、予約はありません。";
+    return;
+  }
+
+  statusEl.style.display = "none";
+  table.style.display = "";
+
+  tbody.innerHTML = reservations
+    .map((r) => {
+      const start = new Date(r.start_at).toLocaleString("ja-JP");
+      const end = new Date(r.end_at).toLocaleString("ja-JP");
+      const layerLabel = r.start_layer === r.end_layer
+        ? `${r.start_layer}層`
+        : `${r.start_layer}〜${r.end_layer}層`;
+      return `<tr>
+        <td>${escapeHtml(r.farm_name)}</td>
+        <td>${escapeHtml(r.username)}</td>
+        <td>${layerLabel}</td>
+        <td>${start}</td>
+        <td>${end}</td>
+        <td>${Number(r.price).toLocaleString()} ドル</td>
+      </tr>`;
+    })
+    .join("");
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str || "";
+    return div.innerHTML;
+  }
+});
+</script>
