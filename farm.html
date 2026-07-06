@@ -52,36 +52,49 @@ title: 畑の予約
 
 <style>
   .farm-controls, .farm-legend { margin: 0.8em 0; display: flex; gap: 1em; align-items: center; flex-wrap: wrap; }
-  .legend-box { display: inline-block; width: 14px; height: 14px; vertical-align: middle; margin-right: 3px; border: 1px solid #999; }
-  .legend-box.available { background: #ffffff; }
-  .legend-box.occupied { background: #e57373; }
-  .legend-box.unbookable { background: #cfcfcf; }
-  .legend-box.selected { background: #81c784; }
+  .legend-box { display: inline-block; width: 14px; height: 14px; vertical-align: middle; margin-right: 3px; border: 2px solid var(--line); }
+  .legend-box.available { background: var(--surface); }
+  .legend-box.occupied { background: var(--occupied); }
+  .legend-box.unbookable { background: var(--unbookable); }
+  .legend-box.selected { background: var(--green); }
 
-  #grid-wrapper { overflow-x: auto; border: 1px solid #ccc; max-width: 100%; }
+  #grid-wrapper { overflow-x: auto; border: 2px solid var(--line); max-width: 100%; }
   #farm-grid { border-collapse: collapse; font-size: 0.75em; }
   #farm-grid th, #farm-grid td {
-    border: 1px solid #ddd;
-    width: 26px;
-    height: 22px;
+    border: 1px solid var(--line-soft);
+    width: 28px;
+    height: 24px;
     text-align: center;
     padding: 0;
     white-space: nowrap;
   }
+  #farm-grid thead th {
+    background: var(--wood);
+    color: #fff;
+    font-weight: 500;
+  }
   #farm-grid th.layer-label, #farm-grid td.layer-label {
     position: sticky;
     left: 0;
-    background: #fafafa;
+    background: var(--surface);
     font-weight: bold;
-    width: 3.5em;
+    width: 3.6em;
+    border-right: 3px solid var(--line);
+    box-shadow: 4px 0 6px -3px rgba(0, 0, 0, 0.25);
+    z-index: 2;
   }
-  .cell-available { background: #ffffff; cursor: pointer; }
-  .cell-available:hover { background: #e0f2f1; }
-  .cell-occupied { background: #e57373; cursor: not-allowed; }
-  .cell-unbookable { background: #cfcfcf; cursor: not-allowed; }
-  .cell-selected { background: #81c784 !important; }
+  #farm-grid thead th.layer-label {
+    background: var(--green-dark);
+    color: #fff;
+    z-index: 3;
+  }
+  .cell-available { background: var(--surface); cursor: pointer; }
+  .cell-available:hover { background: #EEF4E6; }
+  .cell-occupied { background: var(--occupied); cursor: not-allowed; }
+  .cell-unbookable { background: var(--unbookable); cursor: not-allowed; }
+  .cell-selected { background: var(--green) !important; }
 
-  #selection-panel { margin-top: 1em; padding: 1em; border: 1px solid #ccc; }
+  #selection-panel { margin-top: 1em; padding: 1em; border: 2px solid var(--line); background: var(--surface); }
 </style>
 
 <script>
