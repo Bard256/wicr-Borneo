@@ -1,77 +1,164 @@
+/* ===== ボルネオ島サイト共通デザイン =====
+   コンセプト: Minecraftのブロック感(角丸なし・太めの縁取り)を活かしつつ、
+   彩度を抑えた暖かい緑と木の色で、穏やかで爽快な雰囲気にする。
+*/
 
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&family=Noto+Sans+JP:wght@300;400;500&display=swap');
-  *{box-sizing:border-box;margin:0;padding:0}
-  .site{max-width:860px;margin:0 auto;padding:0 0 3rem;font-family:'Noto Sans JP',sans-serif;color:var(--color-text-primary,#1a1a1a)}
-
-  .header{background:#0a1628;color:#fff;padding:2.5rem 2rem 2rem;position:relative;overflow:hidden}
-  .header::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 30px,rgba(200,168,75,0.04) 30px,rgba(200,168,75,0.04) 31px),repeating-linear-gradient(90deg,transparent,transparent 30px,rgba(200,168,75,0.04) 30px,rgba(200,168,75,0.04) 31px);pointer-events:none}
-  .header-inner{position:relative;z-index:1}
-  .country-title{font-family:'Noto Serif JP',serif;font-size:2rem;font-weight:600;color:#fff;letter-spacing:0.06em;line-height:1.2}
-  .country-sub{font-size:0.78rem;color:rgba(200,168,75,0.8);letter-spacing:0.2em;margin-top:0.4rem}
-  .mc-badge{position:absolute;top:1rem;right:1.5rem;background:rgba(200,168,75,0.15);border:1px solid rgba(200,168,75,0.3);color:#e8c96b;font-size:0.65rem;padding:3px 10px;border-radius:2px;letter-spacing:0.12em}
-
-  .nav{background:#132040;display:flex;border-bottom:1px solid rgba(200,168,75,0.2);flex-wrap:wrap}
-  .nav a{color:rgba(255,255,255,0.65);font-size:0.78rem;padding:0.75rem 1.2rem;cursor:pointer;letter-spacing:0.08em;border-bottom:2px solid transparent;transition:all 0.2s;text-decoration:none;display:block}
-  .nav a:hover,.nav a.active{color:#e8c96b;border-bottom-color:#c8a84b}
-
-  .section{display:none;padding:2rem 2rem 0}
-  .section.active{display:block}
-
-
-.nav {
-    background: #b3c0e0;
-    display: flex;
-    border-bottom: 1px solid rgba(200, 168, 75, 0.2);
-    flex-wrap: wrap;
-}
-.section {
-    display: none;
-    padding: 2rem 2rem 0;
-}
-.section.active {
-    display: block;
-}
-.line {
-    border: none;
-    border-top: 5px solid var(--color-border-tertiary, #e0e0e0);
-    margin: 1rem 0 1rem;
-}
-.space {
-      border: none;
-    border-top: 5px solid var(--color-border-tertiary, #ffffff);
-    margin: 1rem 0 1rem;
-}
-.t-title{
-    font-family: 'Noto Serif JP', serif;
-    font-size: 1.8rem;
-    font-weight: 600;
-    color: var(--color-text-primary, #1a1a1a);
-    margin-bottom: 0.25rem;
-    letter-spacing: 0.03em;
-}
-.t-subtitle{
-    font-family: 'Noto Serif JP', serif;
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--color-text-primary, #1a1a1a);
-    margin-bottom: 0.25rem;
-    letter-spacing: 0.03em;
-}
-a.active {
-    color: #e8c96b;
-    border-bottom-color: #c8a84b;
+:root {
+  --bg: #F5F7ED;
+  --surface: #FFFFFF;
+  --line: #4B5D3A;       /* 縁取り(黒の代わりに深緑) */
+  --line-soft: #A9B79A;
+  --ink: #33402A;         /* 本文の文字色 */
+  --ink-soft: #5C6B4F;
+  --green: #6FA050;       /* メインアクセント */
+  --green-dark: #4B7233;
+  --wood: #C99A56;        /* サブアクセント(木材色) */
+  --wood-dark: #A97B3E;
+  --gold: #E3B23C;        /* ハイライト(小麦色) */
+  --occupied: #E28B7D;    /* 予約済み(畑グリッド用) */
+  --unbookable: #D9D9CE;  /* 予約対象外(畑グリッド用) */
 }
 
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Noto Sans JP', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.8;
+}
+
+a { color: var(--green-dark); }
+
+/* ヘッダー・ナビゲーション ------------------------------------------------ */
+.site-header-wrap {
+  background: var(--surface);
+  border-bottom: 3px solid var(--line);
+}
+.site-header {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0.9rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.site-title {
+  font-family: 'Zen Maru Gothic', sans-serif;
+  font-weight: 700;
+  font-size: 1.3rem;
+  color: var(--green-dark);
+  text-decoration: none;
+}
+nav.nav {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-left: 0.5rem;
+}
+nav.nav a {
+  text-decoration: none;
+  font-size: 0.85rem;
+  padding: 0.45rem 0.85rem;
+  border: 2px solid var(--line);
+  color: var(--ink);
+  background: var(--surface);
+}
+nav.nav a:hover { background: #EEF4E6; }
+nav.nav a.nav-tab.active {
+  background: var(--green);
+  border-color: var(--green-dark);
+  color: #fff;
+}
+
+#auth-status {
+  margin-left: auto;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
 .borneo-auth-badge {
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 0.9em;
+  display: inline-block;
+  border: 2px solid var(--line);
+  padding: 0.35rem 0.75rem;
+  background: var(--surface);
 }
-.borneo-auth-islander {
-  background: #ffd54f;
-  color: #333;
+.borneo-auth-badge.borneo-auth-islander {
+  background: var(--gold);
+  border-color: var(--wood-dark);
+  color: var(--ink);
 }
-.borneo-auth-visitor {
-  background: #b0bec5;
-  color: #333;
+.borneo-auth-badge.borneo-auth-visitor {
+  background: #EFEADA;
+  border-color: var(--line-soft);
+}
+#discord-login-btn, #borneo-logout-btn {
+  border: 2px solid var(--line);
+  background: var(--surface);
+  padding: 0.45rem 0.9rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+#discord-login-btn:hover, #borneo-logout-btn:hover { background: #EEF4E6; }
+
+/* メインコンテンツ ------------------------------------------------------- */
+main.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2.2rem 1.5rem 4rem;
+}
+
+h1, h2, .t-title, .t-subtitle {
+  font-family: 'Zen Maru Gothic', sans-serif;
+  font-weight: 700;
+  color: var(--ink);
+}
+.t-title { font-size: 1.45rem; margin: 1.4rem 0 0.6rem; }
+.t-subtitle { font-size: 1.05rem; margin: 1.1rem 0 0.4rem; color: var(--green-dark); }
+
+/* 区切り線:草ブロックの断面(上が緑、下が土)をモチーフにした署名的な要素 */
+hr, hr.line {
+  border: none;
+  height: 6px;
+  background: linear-gradient(to bottom, var(--green) 0 60%, var(--wood) 60% 100%);
+  margin: 1.4rem 0;
+}
+
+.section { display: none; }
+.section.active { display: block; }
+
+/* ボタン共通 -------------------------------------------------------------- */
+button {
+  font-family: inherit;
+  border: 2px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+button:hover { background: #EEF4E6; }
+
+/* フッター ---------------------------------------------------------------- */
+.site-footer-wrap {
+  border-top: 3px solid var(--line);
+  margin-top: 2rem;
+  padding: 1.2rem 0;
+}
+.site-footer {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+/* レスポンシブ ------------------------------------------------------------ */
+@media (max-width: 600px) {
+  .site-header { padding: 0.7rem 1rem; }
+  main.container { padding: 1.5rem 1rem 3rem; }
+  #auth-status { margin-left: 0; width: 100%; order: 3; }
 }
